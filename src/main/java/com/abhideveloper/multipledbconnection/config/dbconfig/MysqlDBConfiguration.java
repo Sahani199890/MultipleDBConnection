@@ -1,53 +1,47 @@
-package com.abhideveloper.multipledbconnection.config;
+package com.abhideveloper.multipledbconnection.config.dbconfig;
 
 import jakarta.persistence.EntityManagerFactory;
+import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import javax.sql.DataSource;
-
-
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        basePackages = "com.abhideveloper.multipledbconnection.repo.h2",
-        entityManagerFactoryRef = "h2EntityManagerFactory",
-        transactionManagerRef = "h2TransactionManager"
+        basePackages = "com.abhideveloper.multipledbconnection.repo.mysql", // ✅ Use only MySQL repositories
+        entityManagerFactoryRef = "mysqlEntityManagerFactory",
+        transactionManagerRef = "mysqlTransactionManager"
 )
-public class H2DBConfiguration {
+public class MysqlDBConfiguration {
 
-    @Primary
-    @Bean(name = "h2DataSource")
-    @ConfigurationProperties(prefix = "spring.datasource.h2")
+    @Bean(name = "mysqlDataSource")
+    @ConfigurationProperties(prefix = "spring.datasource.mysql")
     public DataSource dataSource() {
         return DataSourceBuilder.create().build();
     }
 
-    @Primary
-    @Bean(name = "h2EntityManagerFactory")
+    @Bean(name = "mysqlEntityManagerFactory")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(
-            EntityManagerFactoryBuilder builder, @Qualifier("h2DataSource") DataSource dataSource) {
+            EntityManagerFactoryBuilder builder, @Qualifier("mysqlDataSource") DataSource dataSource) {
         return builder
                 .dataSource(dataSource)
-                .packages("com.abhideveloper.multipledbconnection.entity.h2")
-                .persistenceUnit("h2")
+                .packages("com.abhideveloper.multipledbconnection.entity.mysql") // ✅ Only MySQL entities
+                .persistenceUnit("mysql")
                 .build();
     }
 
-    @Primary
-    @Bean(name = "h2TransactionManager")
+    @Bean(name = "mysqlTransactionManager")
     public PlatformTransactionManager transactionManager(
-            @Qualifier("h2EntityManagerFactory") EntityManagerFactory entityManagerFactory) {
+            @Qualifier("mysqlEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory);
     }
 }
