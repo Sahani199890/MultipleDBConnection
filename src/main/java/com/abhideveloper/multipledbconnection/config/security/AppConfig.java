@@ -1,6 +1,5 @@
 package com.abhideveloper.multipledbconnection.config.security;
 
-import com.abhideveloper.multipledbconnection.entity.mysql.UserEntity;
 import com.abhideveloper.multipledbconnection.repo.mysql.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -15,7 +14,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Optional;
 
 
 @Configuration
@@ -33,8 +31,7 @@ public class AppConfig {
         return new UserDetailsService() {
             @Override
             public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
-                Optional<UserEntity> entityOptional=repository.findByEmail(userName);
-                return (UserDetails) entityOptional.orElse(null);
+                return (UserDetails) repository.findByEmail(userName).orElseThrow(() -> new UsernameNotFoundException("User not found"));
             }
         };
     }

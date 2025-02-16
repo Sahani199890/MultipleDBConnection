@@ -17,7 +17,7 @@ import io.jsonwebtoken.security.Keys;
 
 
 @Configuration
-public class JwtTokenSecurity {
+public class JWTToken {
 
     private static final String SECRET_KEY="jIQ77P02vBRUpVl9QCFWTzwv4tqBrkD/AxxTXQZcWy60YwFzU5XO/8fPwtmCKMEK";
 
@@ -31,17 +31,18 @@ public class JwtTokenSecurity {
     }
 
 
-    public String generateToken(String email,String password) {
-        return generateToken(new HashMap<>(),email,password);
+    public String generateToken(String email) {
+        return generateToken(new HashMap<>(),email);
     }
 
 
     public String generateToken(Map<String,Object> extraClaims,
-                                String email,String password) {
+                                String email) {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(email+"@@"+password)
+                .setSubject(email)
+                .setIssuer("Abhishek Sahani Developer")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 *60 *60*24))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
@@ -51,7 +52,7 @@ public class JwtTokenSecurity {
 
     public boolean isTokenValid(String token, UserEntity userDetails) {
         final String email=extractAdminId(token);
-        String validData=userDetails.getEmail()+"@@"+userDetails.getPassword();
+        String validData=userDetails.getEmail();
         return (email.equals(validData)) && !isTokenExpired(token);
     }
 

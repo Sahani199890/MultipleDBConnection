@@ -23,37 +23,41 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtTokenSecurity jwtTokenSecurity;
+    private final JWTToken jwtToken;
     private final UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
+        final String endPoint = request.getRequestURI();
         final String jwt;
         final String userEmail;
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (endPoint.startsWith("/v1/register") || endPoint.startsWith("/v1/login") || endPoint.startsWith("/h2")
+                || endPoint.startsWith("/swagger-ui") || endPoint.startsWith("/v3/api-docs")) {
             filterChain.doFilter(request, response);
             return;
         }
+        else if(authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+            userEmail = jwtToken.extractAdminId(jwt);
 
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
-        jwt = authHeader.substring(7);
-        userEmail = jwtTokenSecurity.extractAdminId(jwt);
+                if (jwtToken.isTokenValid(jwt, (UserEntity) userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails =  this.userDetailsService.loadUserByUsername(userEmail);
-
-            if (jwtTokenSecurity.isTokenValid(jwt, (UserEntity) userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+            filterChain.doFilter(request, response);
+            return;
         }
-
-        filterChain.doFilter(request, response);
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.getWriter().write("Forbidden: Invalid or missing token");
     }
 }

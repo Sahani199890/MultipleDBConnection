@@ -29,17 +29,16 @@ public class UserServiceImp implements UserService{
     @Override
     public UserModal getUserById(Long id) {
         Optional<UserEntity> userEntityOpt=userRepo.findById(id);
-        if(userEntityOpt.isPresent()){
-            return Helper.entityToModal(userEntityOpt.get());
-        }
-        return null;
+        return userEntityOpt.map(Helper::entityToModal).orElse(null);
     }
 
     @Override
     public List<UserModal> getAllUsers() {
         List<UserEntity> userEntities=userRepo.findAll();
         List<UserModal> userModalList=new ArrayList<>();
-        userEntities.stream().map((entity -> userModalList.add(Helper.entityToModal(entity))));
+        for(UserEntity entity:userEntities){
+            userModalList.add(Helper.entityToModal(entity));
+        }
         return userModalList;
     }
 
