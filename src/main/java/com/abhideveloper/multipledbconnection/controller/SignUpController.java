@@ -1,6 +1,5 @@
 package com.abhideveloper.multipledbconnection.controller;
 
-import com.abhideveloper.multipledbconnection.entity.h2.SignUpEntity;
 import com.abhideveloper.multipledbconnection.modal.SignUpModal;
 import com.abhideveloper.multipledbconnection.service.SignUpService;
 import org.springframework.http.ResponseEntity;
